@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
+using System.Windows.Controls;
 using AI_Calendar.Application.Configuration;
 
 namespace AI_Calendar.Presentation.Views;
@@ -99,6 +100,41 @@ public partial class DesktopWidget : Window
         settings.PositionY = this.Top;
         settings.Save();
 
+        // 清理任务栏图标（按照官方示例）
+        TrayIcon?.Dispose();
+
         base.OnClosing(e);
     }
+
+    #region 任务栏图标事件处理（完全按照官方示例方式）
+
+    private void TrayIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
+    {
+        // 双击托盘图标显示窗口
+        ShowCalendar();
+    }
+
+    private void ShowCalendar_Click(object sender, RoutedEventArgs e)
+    {
+        ShowCalendar();
+    }
+
+    private void ShowCalendar()
+    {
+        this.Show();
+        this.WindowState = WindowState.Normal;
+        this.Activate();
+    }
+
+    private void ToggleTransparency_Click(object sender, RoutedEventArgs e)
+    {
+        ToggleMouseTransparency();
+    }
+
+    private void ExitApplication_Click(object sender, RoutedEventArgs e)
+    {
+        System.Windows.Application.Current.Shutdown();
+    }
+
+    #endregion
 }
