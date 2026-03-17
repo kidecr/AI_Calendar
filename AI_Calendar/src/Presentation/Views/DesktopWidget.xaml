@@ -1,0 +1,53 @@
+<Window x:Class="AI_Calendar.Presentation.Views.DesktopWidget"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="False"
+        Width="400" Height="250" 
+        Left="100" Top="100">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 日期和星期 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding CurrentDate}" FontSize="32" FontWeight="Bold" 
+                       Foreground="White" HorizontalAlignment="Center">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="5" ShadowDepth="2"/>
+                </TextBlock.Effect>
+            </TextBlock>
+            <TextBlock Text="{Binding CurrentWeekday}" FontSize="24" FontWeight="Bold"
+                       Foreground="White" Margin="15,0,0,0" HorizontalAlignment="Center">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="5" ShadowDepth="2"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </StackPanel>
+        
+        <!-- 农历 -->
+        <TextBlock Grid.Row="1" Text="{Binding LunarDate}" FontSize="16" 
+                   Foreground="#CCCCCC" HorizontalAlignment="Center" Margin="0,10,0,0">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="3" ShadowDepth="1"/>
+            </TextBlock.Effect>
+        </TextBlock>
+        
+        <!-- 时间 -->
+        <TextBlock Grid.Row="2" Text="{Binding CurrentTime}" FontSize="64" 
+                   FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" 
+                   Margin="0,10,0,0">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="3"/>
+            </TextBlock.Effect>
+        </TextBlock>
+    </Grid>
+</Window>
