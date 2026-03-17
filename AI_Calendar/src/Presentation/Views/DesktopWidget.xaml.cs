@@ -1,8 +1,8 @@
+using System.Collections;
 using System.Windows;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
-using System.Windows.Controls;
 using AI_Calendar.Application.Configuration;
 
 namespace AI_Calendar.Presentation.Views;
@@ -21,6 +21,24 @@ public partial class DesktopWidget : Window
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int newStyle);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr FindWindowEx(IntPtr hP, IntPtr hC, string? sC, string? sW);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumWindows(EnumedWindow lpEnumFunc, ArrayList lParam);
+
+    private delegate bool EnumedWindow(IntPtr handleWindow, ArrayList handles);
+
+    private static bool GetWindowHandle(IntPtr windowHandle, ArrayList windowHandles)
+    {
+        windowHandles.Add(windowHandle);
+        return true;
+    }
+
     #endregion
 
     public DesktopWidget()
@@ -31,17 +49,43 @@ public partial class DesktopWidget : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        // 获取窗口句柄
+        // 1. 加载并应用保存的窗口位置
+        var settings = WidgetSettings.Load();
+        this.Left = settings.PositionX;
+        this.Top = settings.PositionY;
+
+        // 2. 获取窗口句柄
         var helper = new WindowInteropHelper(this);
         var hwnd = helper.Handle;
 
-        if (hwnd != IntPtr.Zero) 
+        if (hwnd != IntPtr.Zero)
         {
-            // 设置扩展样式：透明 + 工具窗口
+            // 3. 设置扩展样式：透明 + 工具窗口
             var extendedStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
             extendedStyle |= WS_EX_TRANSPARENT;
             extendedStyle |= WS_EX_TOOLWINDOW;
             SetWindowLong(hwnd, GWL_EXSTYLE, extendedStyle);
+
+            // 4. 设置为桌面的子窗口，防止 Win+D 隐藏
+            SetAsDesktopChild();
+        }
+    }
+
+    private void SetAsDesktopChild()
+    {
+        ArrayList windowHandles = new ArrayList();
+        EnumedWindow callBackPtr = GetWindowHandle;
+        EnumWindows(callBackPtr, windowHandles);
+
+        foreach (IntPtr windowHandle in windowHandles)
+        {
+            IntPtr hNextWin = FindWindowEx(windowHandle, IntPtr.Zero, "SHELLDLL_DefView", null);
+            if (hNextWin != IntPtr.Zero)
+            {
+                var interop = new WindowInteropHelper(this);
+                interop.EnsureHandle();
+                interop.Owner = hNextWin;
+            }
         }
     }
 
@@ -104,6 +148,18 @@ public partial class DesktopWidget : Window
         TrayIcon?.Dispose();
 
         base.OnClosing(e);
+    }
+
+    /// <summary>
+    /// 鼠标左键按下时拖动窗口（仅在非穿透模式下）
+    /// </summary>
+    private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // 只有在非穿透模式下才允许拖动
+        if (!_isTransparent && e.ButtonState == MouseButtonState.Pressed)
+        {
+            this.DragMove();
+        }
     }
 
     #region 任务栏图标事件处理（完全按照官方示例方式）
